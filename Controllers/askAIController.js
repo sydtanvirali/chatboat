@@ -1,5 +1,6 @@
 import fs from "fs";
 import dotenv from "dotenv";
+import collectText from "./collectText.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 dotenv.config();
 
@@ -17,26 +18,10 @@ const askAI = async (question) => {
     const rawData = JSON.parse(fs.readFileSync("data.json", "utf8"));
 
     let websiteText = "";
-
-    // Use fullText if available, else try fallback fields
-    if (rawData.fullText) {
-      websiteText = rawData.fullText;
-    } else {
-      if (Array.isArray(rawData)) {
-        for (const item of rawData) {
-          if (item.content) websiteText += item.content + " ";
-          if (item.fullText) websiteText += item.fullText + " ";
-          if (item.text) websiteText += item.text + " ";
-        }
-      } else if (typeof rawData === "object" && rawData !== null) {
-        websiteText = rawData.content || rawData.fullText || rawData.text || "";
-
-        if (rawData.paragraphs && Array.isArray(rawData.paragraphs)) {
-          websiteText = rawData.paragraphs.join(" ");
-        }
-      }
-    }
-    websiteText = websiteText.trim();
+    // Merge everything into websiteText
+    websiteText = collectText(rawData);
+    // Remove \n and extra spaces
+    websiteText = websiteText.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
 
     if (websiteText.length === 0) {
       throw new Error("No readable content found in the crawled data.");
@@ -51,9 +36,13 @@ const askAI = async (question) => {
    - Always respond in the same language as the user's question.
    - Give clear, natural, and helpful answers based strictly on the website text.
    - If the website does not contain enough information to answer, politely respond in a conversational way (like a human would).
-     Example: "I’m sorry, I don’t have any information about that."
+   - Keep responses concise, friendly, and user-oriented.
+   - If the information is not found in the website text, politely say you don’t have that information (like a human would).
+     Example: "मला माफ करा, याबद्दल माझ्याकडे माहिती नाही." / "Sorry, I don’t have details about that."
+   - Do NOT mention the website or content availability in your answers.
    - Do not mention the website or crawling process in your answers.
    - Keep responses concise, friendly, and user-oriented.
+
    Website Content:${websiteText}
    User Question:${question}
    Answer (based only on the website content, in the user's language)`;
