@@ -7,13 +7,27 @@ const PORT = 3000;
 
 // 🔹 API Endpoints
 app.get("/crawl", async (req, res) => {
-  const { url } = req.query;
-  if (!url) return res.status(400).json({ error: "URL is required" });
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: "URL is required" });
 
-  const data = await crawlWebsite(url);
-  if (!data) return res.status(500).json({ error: "Failed to crawl website" });
+    const data = await crawlWebsite(url);
+    if (!data.success) {
+      return res.status(500).json({
+        message: "Crawling failed",
+        error: data.error,
+      });
+    }
 
-  res.json({ message: "Crawled successfully", data });
+    return res.json({
+      message: "Crawled successfully",
+      file: data.file,
+      crawledPages: data.crawledPages,
+    });
+  } catch (err) {
+    console.error("Server error:", err.message);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
 });
 
 // Chatbot endpoint

@@ -24,25 +24,14 @@ const collectText = (data) => {
     text += data.lists.join(" ") + " ";
   }
 
-  // Navigation
-  if (Array.isArray(data.navigation)) {
-    text += data.navigation.map((nav) => nav.text).join(" ") + " ";
+  // Links (flat array in your current crawler)
+  if (Array.isArray(data.links)) {
+    text += data.links.join(" ") + " ";
   }
 
-  // Links (internal + external)
-  if (data.links) {
-    if (data.links.internal) text += data.links.internal.join(" ") + " ";
-    if (data.links.external) text += data.links.external.join(" ") + " ";
-  }
-
-  // Images alt texts
-  if (Array.isArray(data.images)) {
-    text += data.images.map((img) => img.alt || "").join(" ") + " ";
-  }
-
-  // Full text if available
+  // Full text
   if (data.fullText) text += data.fullText + " ";
 
-  return text;
+  return text.trim();
 };
 export default collectText;
